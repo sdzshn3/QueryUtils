@@ -37,6 +37,31 @@ public class QueryUtils {
     public QueryUtils() {
     }
 
+    private ArrayList<TeluguNewsModel> extractWeatherFromJson(String weatherJson) {
+        if (TextUtils.isEmpty(weatherJson)) {
+            return null;
+        }
+        ArrayList<TeluguNewsModel> weathers = new ArrayList<>();
+
+        try {
+            JSONObject object = new JSONObject(weatherJson);
+            int code = object.optInt("cod");
+            if (code != 404) {
+                JSONArray weather = object.getJSONArray("weather");
+                JSONObject currentWeather = weather.getJSONObject(0);
+                String iconId = currentWeather.optString("icon");
+                JSONObject main = object.getJSONObject("main");
+                String temp = main.optString("temp");
+
+                TeluguNewsModel weatherResult = new TeluguNewsModel(iconId, temp);
+                weathers.add(weatherResult);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return weathers;
+    }
+
     public List<TeluguNewsModel> fetchNewsData(int id, String requestUrl, int noOfArticles) {
 
         URL url = createUrl(requestUrl);
@@ -49,9 +74,12 @@ public class QueryUtils {
         }
 
         switch (id) {
+            case DataHolder.WEATHER_LOADER_ID:
+                return extractWeatherFromJson(jsonResponse);
             case DataHolder.TELUGU_NEWS_LOADER_ID:
                 return extractTeluguNewsFromRss(requestUrl, noOfArticles);
         }
+
         return null;
     }
 
